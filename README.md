@@ -10,3 +10,4 @@ a lisp -> javascript transpiler, written in javascript
 - let
 - full javascript interop
 - macros
+- super basic vim syntax
