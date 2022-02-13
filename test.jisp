@@ -1,0 +1,58 @@
+(def canvas (document.getElementById "canvas"))
+(def ctx (canvas.getContext "2d"))
+
+(def w canvas.width)
+(def h canvas.height)
+
+(set ctx.fillStyle "#ff0000")
+(ctx.fillRect 0 0 w h)
+
+(def points [1 2 3])
+
+(def rect (fn [x y w h]
+	(ctx.fillRect x y w h)))
+
+(def circle (fn [cx cy r]
+	(ctx.beginPath)
+	(ctx.arc cx cy r 0 (* 2 Math.PI))
+	(ctx.fill)))
+
+(def rgb (fn [r [g r] [b r]]
+	(set ctx.fillStyle
+		(+ "rgb(" r "," g "," b ")"))))
+
+(def hsl (fn [h [s 100] [l 50]]
+	(set ctx.fillStyle
+		(+ "hsl(" h "," s "%," l "%)"))))
+
+(def n 4)
+(def r (* 0.5 0.8 (/ (Math.min w h) n)))
+
+(def loop (fn [[t 0]
+							 [p []]]
+	(let [[T (% t h)]]
+			(rgb (% t 255))
+			(rect 0 0 w h)
+
+			(for [i 0 n]
+				(for [j 0 n]
+					(let [[I (/ (+ 0.5 i) n)]
+								[J (/ (+ 0.5 j) n)]]
+						(hsl (* 360 (+ (/ t 500) I)))
+						(circle (* w I) (* h J) r))))
+
+			(let [[t_ (+ t 8)]]
+				(window.requestAnimationFrame
+					(fn [] (loop t_ p)))))))
+
+(loop)
+
+(macro prnt (fn [printer name]
+	(format "(${,printer} \"${+ \"my name is \" name}\")")))
+
+(prnt console.log pat)
+
+(macro add_n (fn [n x]
+	(format "(+ ${,n} ${(+ x 50)})")))
+
+(console.log (add_n 8 24))
