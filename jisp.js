@@ -116,7 +116,7 @@ function parseString(str) {
     sexps[sexps.length - 1] += c
   }
 
-  return sexps.filter((x) => x.trim().length)
+  return sexps.filter(x => x.trim().length)
 }
 
 //=====================================
@@ -164,14 +164,14 @@ function simpleOperator(op, ...args) {
 
 //=====================================
 const types = {
-  number: (x) => {
+  number: x => {
     const f = parseFloat(x)
     return isNaN(f) ? undefined : f
   },
-  literal: (x) => (x[0] === "," ? new JispLiteral(x.slice(1)) : undefined),
-  string: (x) => (x[0] === '"' && x[x.length - 1] === '"' ? x : undefined),
-  bool: (x) => (x === "true" ? true : x === "false" ? false : undefined),
-  nil: (x) => (x === "nil" ? null : undefined),
+  literal: x => (x[0] === "," ? new JispLiteral(x.slice(1)) : undefined),
+  string: x => (x[0] === '"' && x[x.length - 1] === '"' ? x : undefined),
+  bool: x => (x === "true" ? true : x === "false" ? false : undefined),
+  nil: x => (x === "nil" ? null : undefined),
 }
 
 //==============================
@@ -213,7 +213,7 @@ const transformers = {
   // functions
   fn: (args, ...body) => {
     body[body.length - 1] = `return ${body[body.length - 1]}`
-    args = args.map((x) => (x instanceof JispList ? `${x[0]} = ${x[1]}` : x))
+    args = args.map(x => (x instanceof JispList ? `${x[0]} = ${x[1]}` : x))
     return `((${args.toCommaString()}) => { ${body.join("\n")} })`
   },
 
@@ -224,8 +224,8 @@ const transformers = {
   each: (list, fn) => `;${list}.forEach(${fn})`,
   map: (list, fn) => `${list}.map(${fn})`,
   at: (list, index) => `${list}.at(${index})`,
-  rest: (list) => `${list}.slice(1)`,
-  first: (list) => `${list}.at(0)`,
+  rest: list => `${list}.slice(1)`,
+  first: list => `${list}.at(0)`,
 
   // iter
   for: (it, ...body) => {
@@ -238,18 +238,18 @@ const transformers = {
   },
 
   // string
-  format: (str) => {
+  format: str => {
     const match_dollar_curly_pairs = /\$\{.+?\}/g
     const match_newline_tabs = /\n\t*/g
 
     let js = str.match(match_dollar_curly_pairs)
     if (!js) return str
 
-    js = js.map((x) => jispCompile(x.trim().slice(2, -1)))
+    js = js.map(x => jispCompile(x.trim().slice(2, -1)))
 
     str = str
       .split(match_dollar_curly_pairs)
-      .filter((x) => x.length)
+      .filter(x => x.length)
       .map((x, i) => (i <= js.length - 1 ? (x += `\$\{${js[i]}\}`) : x))
       .join("")
       .slice(1, -1)
@@ -293,7 +293,7 @@ function toJS(ast) {
   function compile(ast) {
     if (!ast.length) return []
 
-    ast = ast.map((x) => (Array.isArray(x) ? compile(x) : x))
+    ast = ast.map(x => (Array.isArray(x) ? compile(x) : x))
 
     const op = ast[0]
     const args = ast.slice(1)
@@ -356,8 +356,8 @@ function jispWrite(input) {
 //==============================
 function jispEvalAll() {
   Array.from(document.getElementsByTagName("script"))
-    .filter((x) => x.type === "text/jisp")
-    .forEach((x) => jispEval(x.innerText))
+    .filter(x => x.type === "text/jisp")
+    .forEach(x => jispEval(x.innerText))
 }
 
 jispEvalAll()
@@ -368,17 +368,9 @@ jispEvalAll()
 function jispEvalFile(file) {
   if (!file.endsWith(".jisp")) return
 
-  const xhr = new XMLHttpRequest()
-  xhr.open("GET", "test.jisp", true)
-
-  xhr.onreadystatechange = function () {
-    if (xhr.readyState === XMLHttpRequest.DONE) {
-      if (xhr.status === 0 || (xhr.status >= 200 && xhr.status < 400))
-        jispEval(xhr.responseText)
-    }
-  }
-
-  xhr.send()
+  fetch(file)
+    .then(response => response.text())
+    .then(jispEval)
 }
 
 jispEvalFile("test.jisp")
